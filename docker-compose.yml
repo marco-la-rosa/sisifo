@@ -1,0 +1,15 @@
+services:
+  db:
+    image: iskoldt/postgres16-rdkit:2026.04.22
+    environment:
+      POSTGRES_USER: sisifo
+      POSTGRES_PASSWORD: sisifo
+      POSTGRES_DB: sisifo
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+
+volumes:
+  pgdata:

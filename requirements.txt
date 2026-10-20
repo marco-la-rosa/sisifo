@@ -1,4 +1,5 @@
 fastapi==0.156.0
 uvicorn==0.54.0
 pydantic==2.14.1
+psycopg[binary]==3.3.6
 rdkit==2026.9.1
