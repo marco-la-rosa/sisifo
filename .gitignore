@@ -1,6 +1,3 @@
-# Python: file compilati generati automaticamente
 __pycache__/
 *.pyc
-
-# Ambiente virtuale (si ricrea con pip install)
 .venv/
