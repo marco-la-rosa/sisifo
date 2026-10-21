@@ -40,7 +40,7 @@ you talk to it.
 - [x] substructure search with SMARTS
 - [ ] retrosynthesis
 - [ ] conversational assistant on top of the tools above
-- [ ] database migrations
+- [x] database migrations
 
 Ideas for later: import of messy Excel/CSV files, reaction notebook (failures
 included), spectra and HPLC reading, SAR tables, export of characterization
@@ -59,6 +59,9 @@ python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements-dev.txt
 
+# database schema (run after first start and after every pull)
+python migrate.py
+
 # api, docs at http://localhost:8000/docs
 uvicorn main:app --reload
 
@@ -67,6 +70,15 @@ pytest
 ```
 
 The database URL can be changed with the `DATABASE_URL` environment variable.
+
+## Database migrations
+
+The schema is built by numbered SQL files in `migrations/`, applied in order
+by `migrate.py`. Applied files are recorded in the `schema_migrations` table,
+so running it again only applies new ones.
+
+To change the schema, add a new file (e.g. `002_add_supplier.sql`).
+Never edit a migration that has already been applied.
 
 ## Stack
 
