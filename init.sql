@@ -11,7 +11,9 @@ CREATE TABLE compounds (
     hba             INTEGER NOT NULL,
     tpsa            DOUBLE PRECISION NOT NULL,
     rotatable_bonds INTEGER NOT NULL,
+    mfp             bfp GENERATED ALWAYS AS (morganbv_fp(mol)) STORED,
     created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 CREATE INDEX compounds_mol_idx ON compounds USING gist (mol);
+CREATE INDEX compounds_mfp_idx ON compounds USING gist (mfp);

@@ -64,3 +64,26 @@ def search_substructure(smiles: str) -> list[dict]:
             """,
             {"smiles": smiles},
         ).fetchall()
+
+
+def search_similar(smiles: str, threshold: float) -> list[dict]:
+    """return compounds with tanimoto similarity >= threshold, most similar first"""
+    with get_connection() as conn:
+        conn.execute(
+            "SELECT set_config('rdkit.tanimoto_threshold', %s, true)",
+            (str(threshold),),
+        )
+        return conn.execute(
+            """
+            WITH query AS (
+                SELECT morganbv_fp(mol_from_smiles(%(smiles)s::cstring)) AS fp
+            )
+            SELECT id, name, smiles, mw, logp, hbd, hba, tpsa,
+                   rotatable_bonds, created_at,
+                   tanimoto_sml(mfp, query.fp) AS similarity
+            FROM compounds, query
+            WHERE mfp %% query.fp
+            ORDER BY similarity DESC
+            """,
+            {"smiles": smiles},
+        ).fetchall()

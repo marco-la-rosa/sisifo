@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from pydantic import BaseModel
 
 import chemistry
@@ -53,3 +53,9 @@ def list_compounds():
 def search_compounds(substructure: str):
     parse_or_400(substructure)
     return db.search_substructure(substructure)
+
+
+@app.get("/compounds/similar")
+def similar_compounds(smiles: str, threshold: float = Query(0.5, ge=0, le=1)):
+    parse_or_400(smiles)
+    return db.search_similar(smiles, threshold)
