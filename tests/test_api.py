@@ -61,6 +61,20 @@ def test_search_substructure(client, clean_db):
     assert names(r) == ["phenol"]
 
 
+def test_search_smarts(client, clean_db):
+    add(client, "Clc1ccccc1", "chlorobenzene")
+    add(client, "Brc1ccccc1", "bromobenzene")
+    add(client, "CCCCCl", "1-chlorobutane")
+    add(client, "c1ccccc1", "benzene")
+    r = client.get("/compounds/search", params={"substructure": "c[F,Cl,Br,I]"})
+    assert names(r) == ["chlorobenzene", "bromobenzene"]
+
+
+def test_search_invalid_smarts(client):
+    r = client.get("/compounds/search", params={"substructure": "c[F,Cl"})
+    assert r.status_code == 400
+
+
 @pytest.fixture
 def salicylates(client, clean_db):
     """salicylic acid analogs with decreasing similarity, plus caffeine as negative control"""

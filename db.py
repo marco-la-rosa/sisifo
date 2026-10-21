@@ -51,18 +51,18 @@ def list_compounds() -> list[dict]:
         ).fetchall()
 
 
-def search_substructure(smiles: str) -> list[dict]:
-    """return compounds that contain a substructure"""
+def search_substructure(smarts: str) -> list[dict]:
+    """return compounds that contain a substructure, given as smarts"""
     with get_connection() as conn:
         return conn.execute(
             """
             SELECT id, name, smiles, mw, logp, hbd, hba, tpsa,
                    rotatable_bonds, created_at
             FROM compounds
-            WHERE mol @> mol_from_smiles(%(smiles)s::cstring)
+            WHERE mol @> qmol_from_smarts(%(smarts)s::cstring)
             ORDER BY id
             """,
-            {"smiles": smiles},
+            {"smarts": smarts},
         ).fetchall()
 
 

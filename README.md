@@ -30,14 +30,14 @@ you talk to it.
 - `POST /compounds`: registers a compound (canonical SMILES, properties);
   duplicates are rejected
 - `GET /compounds`: lists registered compounds
-- `GET /compounds/search?substructure=...`: substructure search
+- `GET /compounds/search?substructure=...`: substructure search, accepts SMARTS (e.g. `c[F,Cl,Br,I]`) and plain SMILES
 - `GET /compounds/similar?smiles=...&threshold=0.5`: compounds similar to a molecule (Tanimoto on Morgan fingerprints), most similar first
 
 ## Roadmap
 
 - [ ] attach data and files to compounds
 - [x] similarity search (Tanimoto)
-- [ ] substructure search with SMARTS
+- [x] substructure search with SMARTS
 - [ ] retrosynthesis
 - [ ] conversational assistant on top of the tools above
 - [ ] database migrations

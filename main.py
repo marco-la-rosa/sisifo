@@ -51,7 +51,8 @@ def list_compounds():
 
 @app.get("/compounds/search")
 def search_compounds(substructure: str):
-    parse_or_400(substructure)
+    if chemistry.parse_smarts(substructure) is None:
+        raise HTTPException(status_code=400, detail="Invalid SMARTS")
     return db.search_substructure(substructure)
 
 

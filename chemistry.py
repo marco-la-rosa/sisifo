@@ -7,6 +7,11 @@ def parse_smiles(smiles: str) -> Chem.Mol | None:
     return Chem.MolFromSmiles(smiles)
 
 
+def parse_smarts(smarts: str) -> Chem.Mol | None:
+    """return a Mol object from smarts, None if the smarts is invalid"""
+    return Chem.MolFromSmarts(smarts)
+
+
 def canonical_smiles(mol: Chem.Mol) -> str:
     """return the canonical smiles, one unique string per molecule"""
     return Chem.MolToSmiles(mol)
