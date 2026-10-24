@@ -21,3 +21,16 @@ def test_mass_from_moles():
 
 def test_volume_from_mass():
     assert calculations.volume_from_mass(2.2174, 1.08) == pytest.approx(2.0531, rel=1e-4)
+
+
+def test_yield_percent():
+    assert calculations.yield_percent(2.10, 180.16, 0.01448) == pytest.approx(80.50, rel=1e-4)
+
+
+@pytest.mark.parametrize("mass_g, limiting_coefficient, product_coefficient", [
+    (1.05, 2, 1),
+    (4.20, 1, 2),
+])
+def test_yield_percent_coefficients(mass_g, limiting_coefficient, product_coefficient):
+    result = calculations.yield_percent(mass_g, 180.16, 0.01448, limiting_coefficient, product_coefficient)
+    assert result == pytest.approx(80.50, rel=1e-4)
