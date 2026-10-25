@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Sisifo</title>
+  </head>
+  <body>
+    <h1>Sisifo</h1>
+    <textarea id="note-body" rows="4" placeholder="What did you just do?"></textarea>
+    <button id="save-unassigned">Save as unassigned</button>
+    <h2>Unassigned notes</h2>
+    <ul id="unassigned-notes"></ul>
+    <script>
+      const body = document.getElementById("note-body");
+      const saveUnassigned = document.getElementById("save-unassigned");
+      const unassignedList = document.getElementById("unassigned-notes");
+
+      async function loadUnassigned() {
+        const response = await fetch("/notes?unassigned=true");
+        const notes = await response.json();
+        unassignedList.innerHTML = "";
+        for (const note of notes) {
+          const item = document.createElement("li");
+          item.textContent = note.body;
+          unassignedList.append(item);
+        }
+      }
+
+      loadUnassigned();
+
+      saveUnassigned.addEventListener("click", async () => {
+        const response = await fetch("/notes", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ body: body.value }),
+        });
+        if (response.ok) {
+          body.value = "";
+          loadUnassigned();
+        }
+      });
+    </script>
+  </body>
+</html>

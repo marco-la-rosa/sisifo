@@ -1,10 +1,15 @@
+from pathlib import Path
+
 from fastapi import FastAPI, HTTPException, Query
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 import chemistry
 import db
 
 app = FastAPI(title="Sisifo")
+
+STATIC_DIR = Path(__file__).parent / "static"
 
 
 class MoleculeIn(BaseModel):
@@ -119,3 +124,8 @@ def assign_note(note_id: int, data: NoteAssign):
         raise HTTPException(status_code=404, detail="Experiment not found")
     except db.NoteNotFoundError:
         raise HTTPException(status_code=404, detail="Note not found")
+
+
+@app.get("/")
+def index():
+    return FileResponse(STATIC_DIR / "index.html")
