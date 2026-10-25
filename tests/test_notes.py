@@ -74,3 +74,43 @@ def test_unassigned_notes(client, clean_db):
     add_note(client, "order more DCM")
     assert bodies(client.get("/notes", params={"unassigned": True})) == ["order more DCM"]
     assert bodies(client.get("/notes")) == ["added Ac2O", "order more DCM"]
+
+
+def assign(client, note_id, experiment_id):
+    return client.patch(f"/notes/{note_id}", json={"experiment_id": experiment_id})
+
+
+def test_assign_note(client, clean_db):
+    add_experiment(client, "ML-042")
+    add_note(client, "TLC: SM gone")
+    r = assign(client, 1, 1)
+    assert r.status_code == 200
+    assert r.json()["experiment_id"] == 1
+    assert bodies(client.get("/experiments/1/notes")) == ["TLC: SM gone"]
+    assert client.get("/notes", params={"unassigned": True}).json() == []
+
+
+def test_assign_note_unknown_experiment_returns_404(client, clean_db):
+    add_note(client, "TLC: SM gone")
+    r = assign(client, 1, 99)
+    assert r.status_code == 404
+    assert r.json()["detail"] == "Experiment not found"
+    assert bodies(client.get("/notes", params={"unassigned": True})) == ["TLC: SM gone"]
+
+
+def test_assign_unknown_note_returns_404(client, clean_db):
+    add_experiment(client, "ML-042")
+    r = assign(client, 99, 1)
+    assert r.status_code == 404
+    assert r.json()["detail"] == "Note not found"
+
+
+def test_assign_unknown_note_and_experiment_returns_note_not_found(client, clean_db):
+    r = assign(client, 99, 99)
+    assert r.status_code == 404
+    assert r.json()["detail"] == "Note not found"
+
+
+def test_assign_note_without_experiment_returns_422(client, clean_db):
+    add_note(client, "TLC: SM gone")
+    assert client.patch("/notes/1", json={}).status_code == 422

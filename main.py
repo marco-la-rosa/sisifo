@@ -25,6 +25,10 @@ class NoteIn(BaseModel):
     body: str
 
 
+class NoteAssign(BaseModel):
+    experiment_id: int
+
+
 def parse_or_400(smiles: str):
     """return a Mol object from smiles or raise 400 error"""
     mol = chemistry.parse_smiles(smiles)
@@ -105,3 +109,13 @@ def list_notes(unassigned: bool = False):
     if unassigned:
         return db.list_unassigned_notes()
     return db.list_all_notes()
+
+
+@app.patch("/notes/{note_id}")
+def assign_note(note_id: int, data: NoteAssign):
+    try:
+        return db.assign_note(note_id, data.experiment_id)
+    except db.ExperimentNotFoundError:
+        raise HTTPException(status_code=404, detail="Experiment not found")
+    except db.NoteNotFoundError:
+        raise HTTPException(status_code=404, detail="Note not found")

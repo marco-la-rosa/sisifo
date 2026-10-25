@@ -22,6 +22,10 @@ class ExperimentNotFoundError(Exception):
     """raised when the requested experiment doesn't exist"""
 
 
+class NoteNotFoundError(Exception):
+    """raised when the requested note doesn't exist"""
+
+
 def get_connection() -> psycopg.Connection:
     """open a new db connection, rows come back as dict"""
     return psycopg.connect(DATABASE_URL, row_factory=dict_row)
@@ -187,3 +191,23 @@ def list_all_notes() -> list[dict]:
             ORDER BY created_at, id
             """
         ).fetchall()
+
+
+def assign_note(note_id: int, experiment_id: int) -> dict:
+    """assign a note to an existing experiment"""
+    try:
+        with get_connection() as conn:
+            note = conn.execute(
+                """
+                UPDATE notes
+                SET experiment_id = %(experiment_id)s
+                WHERE id = %(note_id)s
+                RETURNING id, experiment_id, body, created_at
+                """,
+                {"experiment_id": experiment_id, "note_id": note_id},
+            ).fetchone()
+    except ForeignKeyViolation:
+        raise ExperimentNotFoundError(experiment_id)
+    if note is None:
+        raise NoteNotFoundError(note_id)
+    return note
