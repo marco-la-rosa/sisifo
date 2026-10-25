@@ -51,7 +51,10 @@ data for papers and theses, reagent inventory.
 Requirements: Python, Docker.
 
 ```bash
-# database (PostgreSQL + RDKit cartridge, port 5433)
+# credentials: copy the example and set a real password
+cp .env.example .env
+
+# database (PostgreSQL + RDKit cartridge, port 5433, local only)
 docker compose up -d
 
 # python environment
@@ -69,7 +72,9 @@ uvicorn main:app --reload
 pytest
 ```
 
-The database URL can be changed with the `DATABASE_URL` environment variable.
+Credentials and the database URL are read from `.env`, which is not committed.
+`POSTGRES_PASSWORD` is used only when the database volume is first created:
+to change it later, run `ALTER USER` in the database too.
 
 ## Database migrations
 

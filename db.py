@@ -1,12 +1,13 @@
 import os
 
 import psycopg
+from dotenv import load_dotenv
 from psycopg.errors import UniqueViolation, ForeignKeyViolation
 from psycopg.rows import dict_row
 
-DATABASE_URL = os.getenv(
-    "DATABASE_URL", "postgresql://sisifo:sisifo@localhost:5433/sisifo"
-)
+load_dotenv()
+
+DATABASE_URL = os.environ["DATABASE_URL"]
 
 
 class DuplicateCompoundError(Exception):

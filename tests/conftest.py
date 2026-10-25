@@ -6,8 +6,8 @@ import db
 import main
 import migrate
 
-ADMIN_URL = "postgresql://sisifo:sisifo@localhost:5433/sisifo"
-TEST_URL = "postgresql://sisifo:sisifo@localhost:5433/sisifo_test"
+ADMIN_URL = db.DATABASE_URL
+TEST_URL = ADMIN_URL.rsplit("/", 1)[0] + "/sisifo_test"
 
 
 @pytest.fixture(scope="session")

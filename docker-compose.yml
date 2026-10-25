@@ -2,11 +2,11 @@ services:
   db:
     image: iskoldt/postgres16-rdkit:2026.04.22
     environment:
-      POSTGRES_USER: sisifo
-      POSTGRES_PASSWORD: sisifo
-      POSTGRES_DB: sisifo
+      POSTGRES_USER: ${POSTGRES_USER:?set it in .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set it in .env}
+      POSTGRES_DB: ${POSTGRES_DB:?set it in .env}
     ports:
-      - "5433:5432"
+      - "127.0.0.1:5433:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
 
