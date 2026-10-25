@@ -16,6 +16,15 @@ class CompoundIn(BaseModel):
     smiles: str
 
 
+class ExperimentIn(BaseModel):
+    code: str
+
+
+class NoteIn(BaseModel):
+    experiment_id: int | None = None
+    body: str
+
+
 def parse_or_400(smiles: str):
     """return a Mol object from smiles or raise 400 error"""
     mol = chemistry.parse_smiles(smiles)
@@ -60,3 +69,39 @@ def search_compounds(substructure: str):
 def similar_compounds(smiles: str, threshold: float = Query(0.5, ge=0, le=1)):
     parse_or_400(smiles)
     return db.search_similar(smiles, threshold)
+
+
+@app.post("/experiments", status_code=201)
+def create_experiment(data: ExperimentIn):
+    try:
+        return db.insert_experiment(data.code)
+    except db.DuplicateExperimentError:
+        raise HTTPException(status_code=409, detail="Experiment already registered")
+
+
+@app.get("/experiments")
+def list_experiments():
+    return db.list_experiments()
+
+
+@app.post("/notes", status_code=201)
+def create_note(data: NoteIn):
+    try:
+        return db.insert_note(data.body, data.experiment_id)
+    except db.ExperimentNotFoundError:
+        raise HTTPException(status_code=404, detail="Experiment not found")
+
+
+@app.get("/experiments/{experiment_id}/notes")
+def list_experiment_notes(experiment_id: int):
+    try:
+        return db.list_notes(experiment_id)
+    except db.ExperimentNotFoundError:
+        raise HTTPException(status_code=404, detail="Experiment not found")
+
+
+@app.get("/notes")
+def list_notes(unassigned: bool = False):
+    if unassigned:
+        return db.list_unassigned_notes()
+    return db.list_all_notes()

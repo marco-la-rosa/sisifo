@@ -25,7 +25,7 @@ def test_db():
 def clean_db(test_db):
     """clean db before starting test so that each test starts from an empty table with ids from 1"""
     with psycopg.connect(TEST_URL) as conn:
-        conn.execute("TRUNCATE compounds RESTART IDENTITY")
+        conn.execute("TRUNCATE compounds, experiments, notes RESTART IDENTITY")
 
 
 @pytest.fixture

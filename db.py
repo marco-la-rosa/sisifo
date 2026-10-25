@@ -1,7 +1,7 @@
 import os
 
 import psycopg
-from psycopg.errors import UniqueViolation
+from psycopg.errors import UniqueViolation, ForeignKeyViolation
 from psycopg.rows import dict_row
 
 DATABASE_URL = os.getenv(
@@ -11,6 +11,14 @@ DATABASE_URL = os.getenv(
 
 class DuplicateCompoundError(Exception):
     """raised when inserting a compound whose canonical smiles is already in the db"""
+
+
+class DuplicateExperimentError(Exception):
+    """raised when inserting an experiment whose code is already in the db"""
+
+
+class ExperimentNotFoundError(Exception):
+    """raised when the requested experiment doesn't exist"""
 
 
 def get_connection() -> psycopg.Connection:
@@ -86,4 +94,95 @@ def search_similar(smiles: str, threshold: float) -> list[dict]:
             ORDER BY similarity DESC
             """,
             {"smiles": smiles},
+        ).fetchall()
+
+
+def insert_experiment(code: str) -> dict:
+    """insert into database an experiment and return the saved row"""
+    try:
+        with get_connection() as conn:
+            return conn.execute(
+                """
+                INSERT INTO experiments (code)
+                VALUES (%(code)s)
+                RETURNING id, code, created_at
+                """,
+                {"code": code},
+            ).fetchone()
+    except UniqueViolation:
+        raise DuplicateExperimentError(code)
+
+
+def list_experiments() -> list[dict]:
+    """return a list of the experiments in database"""
+    with get_connection() as conn:
+        return conn.execute(
+            """
+            SELECT id, code, created_at
+            FROM experiments
+            ORDER BY created_at DESC, id DESC
+            """
+        ).fetchall()
+
+
+def insert_note(body: str, experiment_id: int | None = None) -> dict:
+    """insert into database a note and return the saved row"""
+    try:
+        with get_connection() as conn:
+            return conn.execute(
+                """
+                INSERT INTO notes (body, experiment_id)
+                VALUES (%(body)s, %(experiment_id)s)
+                RETURNING id, experiment_id, body, created_at
+                """,
+                {"body": body, "experiment_id": experiment_id},
+            ).fetchone()
+    except ForeignKeyViolation:
+        raise ExperimentNotFoundError(experiment_id)
+
+
+def list_notes(experiment_id: int) -> list[dict]:
+    """return a list of the notes of a certain experiment"""
+    with get_connection() as conn:
+        experiment = conn.execute(
+            """
+            SELECT 1 FROM experiments WHERE id = %(experiment_id)s
+            """,
+            {"experiment_id": experiment_id},
+        ).fetchone()
+        if experiment is None:
+            raise ExperimentNotFoundError(experiment_id)
+        return conn.execute(
+            """
+            SELECT id, experiment_id, body, created_at
+            FROM notes
+            WHERE experiment_id = %(experiment_id)s
+            ORDER BY created_at, id
+            """,
+            {"experiment_id": experiment_id},
+        ).fetchall()
+
+
+def list_unassigned_notes() -> list[dict]:
+    """return a list of notes that don't belong to any experiment"""
+    with get_connection() as conn:
+        return conn.execute(
+            """
+            SELECT id, experiment_id, body, created_at
+            FROM notes
+            WHERE experiment_id IS NULL
+            ORDER BY created_at, id
+            """,
+        ).fetchall()
+
+
+def list_all_notes() -> list[dict]:
+    """return a list of all the notes, with or without experiment"""
+    with get_connection() as conn:
+        return conn.execute(
+            """
+            SELECT id, experiment_id, body, created_at
+            FROM notes
+            ORDER BY created_at, id
+            """
         ).fetchall()
