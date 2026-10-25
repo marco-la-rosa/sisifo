@@ -7,39 +7,80 @@
   </head>
   <body>
     <h1>Sisifo</h1>
+    <label for="experiment">Active experiment</label>
+    <select id="experiment"></select>
     <textarea id="note-body" rows="4" placeholder="What did you just do?"></textarea>
+    <button id="save-experiment">Save to experiment</button>
     <button id="save-unassigned">Save as unassigned</button>
+    <h2>Experiment notes</h2>
+    <ul id="experiment-notes"></ul>
     <h2>Unassigned notes</h2>
     <ul id="unassigned-notes"></ul>
     <script>
       const body = document.getElementById("note-body");
+      const experimentSelect = document.getElementById("experiment");
+      const saveExperiment = document.getElementById("save-experiment");
       const saveUnassigned = document.getElementById("save-unassigned");
+      const experimentList = document.getElementById("experiment-notes");
       const unassignedList = document.getElementById("unassigned-notes");
 
-      async function loadUnassigned() {
-        const response = await fetch("/notes?unassigned=true");
-        const notes = await response.json();
-        unassignedList.innerHTML = "";
+      function showNotes(list, notes) {
+        list.innerHTML = "";
         for (const note of notes) {
           const item = document.createElement("li");
           item.textContent = note.body;
-          unassignedList.append(item);
+          list.append(item);
         }
       }
 
-      loadUnassigned();
+      async function loadUnassigned() {
+        const response = await fetch("/notes?unassigned=true");
+        showNotes(unassignedList, await response.json());
+      }
 
-      saveUnassigned.addEventListener("click", async () => {
+      async function loadExperimentNotes() {
+        if (!experimentSelect.value) {
+          showNotes(experimentList, []);
+          return;
+        }
+        const response = await fetch(`/experiments/${experimentSelect.value}/notes`);
+        showNotes(experimentList, await response.json());
+      }
+
+      async function loadExperiments() {
+        const response = await fetch("/experiments");
+        const experiments = await response.json();
+        experimentSelect.innerHTML = "";
+        for (const experiment of experiments) {
+          const option = document.createElement("option");
+          option.value = experiment.id;
+          option.textContent = experiment.code;
+          experimentSelect.append(option);
+        }
+      }
+
+      async function saveNote(experimentId) {
+        if (!body.value.trim()) {
+          return;
+        }
         const response = await fetch("/notes", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ body: body.value }),
+          body: JSON.stringify({ body: body.value, experiment_id: experimentId }),
         });
         if (response.ok) {
           body.value = "";
           loadUnassigned();
+          loadExperimentNotes();
         }
-      });
+      }
+
+      saveExperiment.addEventListener("click", () => saveNote(Number(experimentSelect.value)));
+      saveUnassigned.addEventListener("click", () => saveNote(null));
+      experimentSelect.addEventListener("change", loadExperimentNotes);
+
+      loadUnassigned();
+      loadExperiments().then(loadExperimentNotes);
     </script>
   </body>
 </html>
